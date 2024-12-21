@@ -1,5 +1,5 @@
 use check_diff::{
-    check_diff, compile_rustfmt, search_for_rs_files, CheckDiffError, CheckDiffRunners,
+    CheckDiffError, CheckDiffRunners, check_diff, compile_rustfmt, search_for_rs_files,
 };
 use std::fs::File;
 use tempfile::Builder;

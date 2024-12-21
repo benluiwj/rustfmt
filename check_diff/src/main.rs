@@ -1,4 +1,4 @@
-use check_diff::{check_diff, compile_rustfmt, CheckDiffError};
+use check_diff::{CheckDiffError, check_diff, compile_rustfmt};
 use clap::Parser;
 use tempfile::Builder;
 use tracing::info;
