@@ -1,8 +1,34 @@
 use check_diff::{
-    CheckDiffError, CheckDiffRunners, check_diff, compile_rustfmt, search_for_rs_files,
+    CheckDiffError, CheckDiffRunners, CodeFormatter, check_diff, search_for_rs_files,
 };
 use std::fs::File;
 use tempfile::Builder;
+
+struct DoNothingFormatter;
+
+impl CodeFormatter for DoNothingFormatter {
+    fn format_code<'a>(
+        &self,
+        _code: &'a str,
+        _config: &Option<Vec<String>>,
+    ) -> Result<String, CheckDiffError> {
+        Ok(String::new())
+    }
+}
+
+/// Formatter that adds a white space to the end of the codd
+struct AddWhiteSpaceFormatter;
+
+impl CodeFormatter for AddWhiteSpaceFormatter {
+    fn format_code<'a>(
+        &self,
+        code: &'a str,
+        _config: &Option<Vec<String>>,
+    ) -> Result<String, CheckDiffError> {
+        let result = code.to_string() + " ";
+        Ok(result)
+    }
+}
 
 #[test]
 fn search_for_files_correctly_non_nested() -> Result<(), Box<dyn std::error::Error>> {
@@ -45,14 +71,8 @@ fn search_for_files_correctly_nested() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-fn check_diff_test() -> Result<(), CheckDiffError> {
-    let tmp_dir = Builder::new().tempdir_in("").unwrap();
-    let runners = compile_rustfmt(
-        tmp_dir.path(),
-        "https://github.com/rust-lang/rustfmt".to_string(),
-        "rustfmt-1.4.32".to_string(),
-        None,
-    )?;
+fn check_diff_test_no_formatting_difference() -> Result<(), CheckDiffError> {
+    let runners = CheckDiffRunners::new(DoNothingFormatter, DoNothingFormatter);
 
     let dir = Builder::new().tempdir_in("").unwrap();
     let file_path = dir.path().join("test.rs");
@@ -64,19 +84,13 @@ fn check_diff_test() -> Result<(), CheckDiffError> {
 }
 
 #[test]
-fn format_simple_code() -> Result<(), CheckDiffError> {
-    let tmp_dir = Builder::new().tempdir_in("").unwrap();
-    let runners = compile_rustfmt(
-        tmp_dir.path(),
-        "https://github.com/rust-lang/rustfmt".to_string(),
-        "rustfmt-1.4.32".to_string(),
-        None,
-    )?;
+fn check_diff_test_formatting_difference() -> Result<(), CheckDiffError> {
+    let runners = CheckDiffRunners::new(DoNothingFormatter, AddWhiteSpaceFormatter);
+    let dir = Builder::new().tempdir_in("").unwrap();
+    let file_path = dir.path().join("test.rs");
+    let _tmp_file = File::create(file_path)?;
 
-    //let output = runners
-    //    .src_runner
-    //    .format_code("fn main()              {}", &None)?;
-    //assert_eq!(output, "fn main() {}\n".to_string());
-    //
+    let errors = check_diff(None, runners, dir.path());
+    assert_ne!(errors, 0);
     Ok(())
 }

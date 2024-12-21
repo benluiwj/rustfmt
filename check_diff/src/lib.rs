@@ -80,7 +80,6 @@ impl Diff {
     }
 }
 
-// will be used in future PRs, just added to make the compiler happy
 pub struct CheckDiffRunners<F, S> {
     feature_runner: F,
     src_runner: S,
@@ -413,7 +412,7 @@ pub fn search_for_rs_files(repo: &Path) -> impl Iterator<Item = PathBuf> {
 /// repo specified with the specific configs.
 pub fn check_diff(
     config: Option<Vec<String>>,
-    runners: CheckDiffRunners<RustfmtRunner, RustfmtRunner>,
+    runners: CheckDiffRunners<impl CodeFormatter, impl CodeFormatter>,
     repo: &Path,
 ) -> i32 {
     let mut errors = 0;
